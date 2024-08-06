@@ -1,8 +1,7 @@
 import string
 
 
-def \
-        evaluate_info():
+def evaluate_info():
     info = input().split(' ')
     email = info[-1]
     name = info[0]
