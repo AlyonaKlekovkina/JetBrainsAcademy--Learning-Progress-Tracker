@@ -58,25 +58,103 @@ def check_name(name):
     return name
 
 
-def add_students():
+def add_students(students, id_list):
     count = 0
     print("Enter student credentials or 'back' to return:")
     while True:
         result = evaluate_info()
         if result == 'back':
-            if count == 1:
-                return "Total", str(count), "student has been added."
-            else:
-                return "Total", str(count), "students have been added."
+            return "Total", str(count), "students have been added."
         elif result == 'Incorrect credentials.':
             print(result)
         elif result == 'Incorrect first name.' or result == 'Incorrect last name.' or result == 'Incorrect email.':
             print(result)
         else:
-            print('The student has been added.')
-            count += 1
+            the_id = create_id(result[0])
+            if the_id in students:
+                print('This email is already taken.')
+            else:
+                print('The student has been added.')
+                count += 1
+                students.add(the_id)
+                id_list.update({the_id: {'name': result[1], 'last name': result[2], 'email': result[0], 'Python': 0, 'DSA': 0, 'Databases': 0, 'Flask': 0}})
 
 
+def create_id(email):
+    hash_symbol = abs(hash(email)) % 100000
+    return hash_symbol
+
+
+def check_student_id(id_to_find):
+    try:
+        the_id = int(id_to_find)
+        if the_id not in id_list:
+            return "Not found"
+        else:
+            return the_id
+    except ValueError:
+        return "Not found"
+
+
+#we need to get the id and 4 digits following the id
+def check_input(inp_to_check):
+    correct_format = inp_to_check.split()
+    try:
+        id = correct_format[0]
+        python = int(correct_format[1])
+        dsa = int(correct_format[2])
+        databases = int(correct_format[3])
+        flask = int(correct_format[4])
+        if len(correct_format) != 5 or python < 0 or dsa < 0 or databases < 0 or flask < 0:
+            return "Incorrect points format."
+        else:
+            return id, python, dsa, databases, flask
+    except (ValueError, IndexError):
+        return "Incorrect points format."
+
+
+def add_points(id_list):
+    print("Enter an id and points or 'back' to return:")
+    while True:
+        inp = input()
+        inp_eval = check_input(inp)
+        if inp == 'back':
+            return 'back'
+        if inp_eval == 'Incorrect points format.':
+            print("Incorrect points format.")
+        elif check_student_id(inp_eval[0]) == 'Not found':
+            print("No student is found for id={}".format(inp_eval[0]))
+        else:
+            id = int(inp_eval[0])
+            python = int(inp_eval[1])
+            dsa = int(inp_eval[2])
+            databases = int(inp_eval[3])
+            flask = int(inp_eval[4])
+            id_list[id]['Python'] += python
+            id_list[id]['DSA'] += dsa
+            id_list[id]['Databases'] += databases
+            id_list[id]['Flask'] += flask
+            print("Points updated.")
+
+
+def return_points(id_list):
+    print("Enter an id or 'back' to return:")
+    while True:
+        input_to_find = input()
+        if input_to_find == 'back':
+            return 'back'
+        elif check_student_id(input_to_find) == 'Not found':
+            print("No student is found for id={}".format(input_to_find))
+        else:
+            p = id_list[int(input_to_find)]['Python']
+            ds = id_list[int(input_to_find)]['DSA']
+            db = id_list[int(input_to_find)]['Databases']
+            fl = id_list[int(input_to_find)]['Flask']
+            print("{} points: Python={}; DSA={}; Databases={}; Flask={}".format(input_to_find, p, ds, db, fl))
+
+
+id_list = {}
+students = set()
 print("Learning progress tracker")
 inp = input()
 while True:
@@ -84,7 +162,7 @@ while True:
         print('No input.')
         inp = input()
     elif inp == 'add students':
-        reply = add_students()
+        reply = add_students(students, id_list)
         print(' '.join(reply))
         inp = input()
     elif inp == 'back':
@@ -93,6 +171,27 @@ while True:
     elif inp == 'exit':
         print('Bye!')
         break
+    elif inp == 'list':
+        if len(id_list) == 0:
+            print("No students found.")
+            inp = input()
+        else:
+            print('Students:')
+            for v in id_list:
+                print(v)
+            inp = input()
+    elif inp == 'add points':
+        result = add_points(id_list)
+        if result == 'back':
+            inp = input()
+        else:
+            print(result)
+    elif inp == "find":
+        find_result = return_points(id_list)
+        if find_result == 'back':
+            inp = input()
+        else:
+            print(find_result)
     else:
         print("Unknown command!")
         inp = input()
