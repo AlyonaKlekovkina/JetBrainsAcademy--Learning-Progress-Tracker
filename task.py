@@ -113,7 +113,7 @@ def check_input(inp_to_check):
         return "Incorrect points format."
 
 
-def add_points(id_list):
+def add_points(id_list, points_list):
     print("Enter an id and points or 'back' to return:")
     while True:
         inp = input()
@@ -131,9 +131,17 @@ def add_points(id_list):
             databases = int(inp_eval[3])
             flask = int(inp_eval[4])
             id_list[id]['Python'] += python
+            if python != 0:
+                points_list["Python"] += 1
             id_list[id]['DSA'] += dsa
+            if dsa != 0:
+                points_list["DSA"] += 1
             id_list[id]['Databases'] += databases
+            if databases != 0:
+                points_list["Databases"] += 1
             id_list[id]['Flask'] += flask
+            if flask != 0:
+                points_list["Flask"] += 1
             print("Points updated.")
 
 
@@ -153,6 +161,117 @@ def return_points(id_list):
             print("{} points: Python={}; DSA={}; Databases={}; Flask={}".format(input_to_find, p, ds, db, fl))
 
 
+def return_statistics(id_list, points_list):
+    try:
+        points_dict = {'Python': 0, 'DSA': 0, 'Databases': 0, 'Flask': 0}
+        enrolled_students = {'Python': 0, 'DSA': 0, 'Databases': 0, 'Flask': 0}
+        average_list = {'Python': 0, 'DSA': 0, 'Databases': 0, 'Flask': 0}
+        for v in id_list:
+            points_dict['Python'] += id_list[v]['Python']
+            if id_list[v]['Python'] != 0:
+                enrolled_students['Python'] += 1
+            points_dict['DSA'] += id_list[v]['DSA']
+            if id_list[v]['DSA'] != 0:
+                enrolled_students['DSA'] += 1
+            points_dict['Databases'] += id_list[v]['Databases']
+            if id_list[v]['Databases'] != 0:
+                enrolled_students['Databases'] += 1
+            points_dict['Flask'] += id_list[v]['Flask']
+            if id_list[v]['Flask'] != 0:
+                enrolled_students['Flask'] += 1
+
+        average_list['Python'] = points_dict['Python'] / enrolled_students['Python']
+        average_list['DSA'] = points_dict['DSA'] / enrolled_students['DSA']
+        average_list['Databases'] = points_dict['Databases'] / enrolled_students['Databases']
+        average_list['Flask'] = points_dict['Flask'] / enrolled_students['Flask']
+
+        highest_activity = sorted(points_list.items(), key=lambda x:x[1], reverse=True)
+        most_popular = sorted(enrolled_students.items(), key=lambda x:x[1], reverse=True)
+        average_sorted = sorted(average_list.items(), key=lambda x:x[1], reverse=True)
+        return highest_activity, most_popular, average_sorted
+    except ZeroDivisionError:
+        return None
+
+
+def calculate_result(sorted_list):
+    most_popular = sorted_list[0][0]
+    least_popular = sorted_list[3][0]
+    for i in range(3):
+        if sorted_list[i][1] == sorted_list[i+1][1]:
+            most_popular += ', ' + sorted_list[i+1][0]
+    if least_popular in most_popular:
+        least_popular = 'n/a'
+    return most_popular, least_popular
+
+
+def calculate_percentage():
+    courses = ['python', 'dsa', 'flask', 'databases']
+    while True:
+        inp = input()
+        if inp == 'back':
+            return 'back'
+        elif inp.casefold() not in courses:
+            print('Unknown course.')
+        else:
+            check_in_dict = ''
+            total = 0
+            if inp == 'python' or inp == "Python":
+                check_in_dict = 'Python'
+                total = 600
+            elif inp == 'dsa'.casefold() or inp == "DSA":
+                check_in_dict = 'DSA'
+                total = 400
+            elif inp == 'databases'or inp == 'Databases':
+                check_in_dict = 'Databases'
+                total = 480
+            elif inp == 'flask' or inp == 'Flask':
+                check_in_dict = 'Flask'
+                total = 550
+            print(check_in_dict)
+            print("id   points completed")
+            points_dict = {}
+            for v in id_list:
+                points = id_list[v][check_in_dict]
+                points_dict.update({v: points})
+
+            points_dict_sorted = sorted(points_dict.items(), key=lambda x:x[1], reverse=True)
+            for value in points_dict_sorted:
+                id = value[0]
+                point = int(value[1])
+                percent = format((point / total) * 100, ".1f")
+                if point != 0:
+                    print('{} {}        {}%'.format(id, point, percent))
+
+
+def statistics_print_statement(id_list):
+    print("Type the name of a course to see details or 'back' to quit:")
+    if len(id_list) == 0:
+        most_popular = 'n/a'
+        least_popular = 'n/a'
+        highest_activity = 'n/a'
+        lowest_activity = 'n/a'
+        easiest_course = 'n/a'
+        hardest_course = 'n/a'
+    else:
+        sorted_list = return_statistics(id_list, points_list)
+        activity = calculate_result(sorted_list[0])
+        popularity = calculate_result(sorted_list[1])
+        hardness = calculate_result(sorted_list[2])
+        most_popular = popularity[0]
+        least_popular = popularity[1]
+        highest_activity = activity[0]
+        lowest_activity = activity[1]
+        easiest_course = hardness[0]
+        hardest_course = hardness[1]
+    print("Most popular:", most_popular)
+    print("Least popular:", least_popular)
+    print("Highest activity:", highest_activity)
+    print("Lowest activity:", lowest_activity)
+    print("Easiest course:", easiest_course)
+    print("Hardest course:", hardest_course)
+
+
+points_list = {"Python": 0, "DSA": 0, "Databases": 0, "Flask": 0}
 id_list = {}
 students = set()
 print("Learning progress tracker")
@@ -181,7 +300,7 @@ while True:
                 print(v)
             inp = input()
     elif inp == 'add points':
-        result = add_points(id_list)
+        result = add_points(id_list, points_list)
         if result == 'back':
             inp = input()
         else:
@@ -192,6 +311,12 @@ while True:
             inp = input()
         else:
             print(find_result)
+    elif inp == "statistics":
+        statistics_print_statement(id_list)
+        if calculate_percentage() == 'back':
+            inp = input()
+        else:
+            calculate_percentage()
     else:
         print("Unknown command!")
         inp = input()
