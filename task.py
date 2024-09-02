@@ -77,7 +77,11 @@ def add_students(students, id_list):
                 print('The student has been added.')
                 count += 1
                 students.add(the_id)
-                id_list.update({the_id: {'name': result[1], 'last name': result[2], 'email': result[0], 'Python': 0, 'DSA': 0, 'Databases': 0, 'Flask': 0}})
+                id_list.update({the_id: {'name': result[1], 'last name': result[2], 'email': result[0], 'Python': 0,
+                                         'DSA': 0, 'Databases': 0, 'Flask': 0, 'Python_completed': False,
+                                         'Python_sent': False, 'DSA_completed': False, 'DSA_sent': False,
+                                         'Databases_completed': False, 'Databases_sent': False,
+                                         'Flask_completed': False, 'Flask_sent': False}})
 
 
 def create_id(email):
@@ -96,7 +100,6 @@ def check_student_id(id_to_find):
         return "Not found"
 
 
-#we need to get the id and 4 digits following the id
 def check_input(inp_to_check):
     correct_format = inp_to_check.split()
     try:
@@ -161,44 +164,53 @@ def return_points(id_list):
             print("{} points: Python={}; DSA={}; Databases={}; Flask={}".format(input_to_find, p, ds, db, fl))
 
 
-def return_statistics(id_list, points_list):
-    try:
-        points_dict = {'Python': 0, 'DSA': 0, 'Databases': 0, 'Flask': 0}
-        enrolled_students = {'Python': 0, 'DSA': 0, 'Databases': 0, 'Flask': 0}
-        average_list = {'Python': 0, 'DSA': 0, 'Databases': 0, 'Flask': 0}
-        for v in id_list:
-            points_dict['Python'] += id_list[v]['Python']
-            if id_list[v]['Python'] != 0:
-                enrolled_students['Python'] += 1
-            points_dict['DSA'] += id_list[v]['DSA']
-            if id_list[v]['DSA'] != 0:
-                enrolled_students['DSA'] += 1
-            points_dict['Databases'] += id_list[v]['Databases']
-            if id_list[v]['Databases'] != 0:
-                enrolled_students['Databases'] += 1
-            points_dict['Flask'] += id_list[v]['Flask']
-            if id_list[v]['Flask'] != 0:
-                enrolled_students['Flask'] += 1
+def enrolled_students_calculation(id_list):
+    enrolled_students = {'Python': 0, 'DSA': 0, 'Databases': 0, 'Flask': 0}
+    for k , v in id_list.items():
+        if v['Python'] != 0:
+            enrolled_students['Python'] += 1
+        if v['DSA'] != 0:
+            enrolled_students['DSA'] += 1
+        if v['Databases'] != 0:
+            enrolled_students['Databases'] += 1
+        if v['Flask'] != 0:
+            enrolled_students['Flask'] += 1
+    most_popular = sorted(enrolled_students.items(), key=lambda x: x[1], reverse=True)
+    return most_popular
 
-        average_list['Python'] = points_dict['Python'] / enrolled_students['Python']
-        average_list['DSA'] = points_dict['DSA'] / enrolled_students['DSA']
-        average_list['Databases'] = points_dict['Databases'] / enrolled_students['Databases']
-        average_list['Flask'] = points_dict['Flask'] / enrolled_students['Flask']
 
-        highest_activity = sorted(points_list.items(), key=lambda x:x[1], reverse=True)
-        most_popular = sorted(enrolled_students.items(), key=lambda x:x[1], reverse=True)
-        average_sorted = sorted(average_list.items(), key=lambda x:x[1], reverse=True)
-        return highest_activity, most_popular, average_sorted
-    except ZeroDivisionError:
-        return None
-
+def calculate_average_score(id_list, points_list):
+    python_points = 0
+    dsa_points = 0
+    databases_points = 0
+    flask_points = 0
+    python = 0
+    dsa = 0
+    dtb = 0
+    flask = 0
+    for k, v in id_list.items():
+        python_points += v['Python']
+        dsa_points += v['DSA']
+        databases_points += v['Databases']
+        flask_points += v['Flask']
+    if points_list['Python'] != 0:
+        python = python_points / points_list['Python']
+    if points_list['DSA'] != 0:
+        dsa = dsa_points / points_list['DSA']
+    if points_list['Databases'] != 0:
+        dtb = databases_points / points_list['Databases']
+    if points_list['Flask'] != 0:
+        flask = flask_points / points_list['Flask']
+    average_score = {'Python': python, 'DSA': dsa, 'Databases': dtb, 'Flask': flask}
+    average_sorted = sorted(average_score.items(), key=lambda x: x[1], reverse=True)
+    return average_sorted
 
 def calculate_result(sorted_list):
     most_popular = sorted_list[0][0]
     least_popular = sorted_list[3][0]
     for i in range(3):
-        if sorted_list[i][1] == sorted_list[i+1][1]:
-            most_popular += ', ' + sorted_list[i+1][0]
+        if sorted_list[0][1] == sorted_list[i + 1][1]:
+            most_popular += ', ' + sorted_list[i + 1][0]
     if least_popular in most_popular:
         least_popular = 'n/a'
     return most_popular, least_popular
@@ -221,7 +233,7 @@ def calculate_percentage():
             elif inp == 'dsa'.casefold() or inp == "DSA":
                 check_in_dict = 'DSA'
                 total = 400
-            elif inp == 'databases'or inp == 'Databases':
+            elif inp == 'databases' or inp == 'Databases':
                 check_in_dict = 'Databases'
                 total = 480
             elif inp == 'flask' or inp == 'Flask':
@@ -233,14 +245,25 @@ def calculate_percentage():
             for v in id_list:
                 points = id_list[v][check_in_dict]
                 points_dict.update({v: points})
-
-            points_dict_sorted = sorted(points_dict.items(), key=lambda x:x[1], reverse=True)
+            points_dict_sorted = sorted(points_dict.items(), key=lambda x: x[1], reverse=True)
             for value in points_dict_sorted:
                 id = value[0]
                 point = int(value[1])
                 percent = format((point / total) * 100, ".1f")
                 if point != 0:
                     print('{} {}        {}%'.format(id, point, percent))
+
+
+def mark_notification_needed(id_list):
+    for key, value in id_list.items():
+        if value['Python'] >= 600:
+            value['Python_completed'] = True
+        if value['DSA'] >= 400:
+            value['DSA_completed'] = True
+        if value['Databases'] >= 480:
+            value['Databases_completed'] = True
+        if value['Flask'] >= 550:
+            value['Flask_completed'] = True
 
 
 def statistics_print_statement(id_list):
@@ -253,10 +276,12 @@ def statistics_print_statement(id_list):
         easiest_course = 'n/a'
         hardest_course = 'n/a'
     else:
-        sorted_list = return_statistics(id_list, points_list)
-        activity = calculate_result(sorted_list[0])
-        popularity = calculate_result(sorted_list[1])
-        hardness = calculate_result(sorted_list[2])
+        popularity_list = enrolled_students_calculation(id_list)
+        activity_list = sorted(points_list.items(), key=lambda x: x[1], reverse=True)
+        hardness_list = calculate_average_score(id_list, points_list)
+        activity = calculate_result(activity_list)
+        popularity = calculate_result(popularity_list)
+        hardness = calculate_result(hardness_list)
         most_popular = popularity[0]
         least_popular = popularity[1]
         highest_activity = activity[0]
@@ -271,52 +296,87 @@ def statistics_print_statement(id_list):
     print("Hardest course:", hardest_course)
 
 
-points_list = {"Python": 0, "DSA": 0, "Databases": 0, "Flask": 0}
+def notification_form(id_list):
+    email_list = []
+    for k, v in id_list.items():
+        email = v['email']
+        name = v['name']
+        last_name = v['last name']
+        if v['Python_completed'] and v['Python_sent'] is False:
+            course_name = 'Python'
+            if email not in email_list:
+                email_list.append(email)
+            print("To: {}\nRe: Your Learning Progress\nHello, {} {}! You have accomplished our {} course!".format(email,
+                                                                                                                  name,
+                                                                                                                  last_name,
+                                                                                                                  course_name))
+            v['Python_sent'] = True
+        if v['DSA_completed'] and v['DSA_sent'] is False:
+            course_name = 'DSA'
+            if email not in email_list:
+                email_list.append(email)
+            print("To: {}\nRe: Your Learning Progress\nHello, {} {}! You have accomplished our {} course!".format(email,
+                                                                                                                  name,
+                                                                                                                  last_name,
+                                                                                                                  course_name))
+            v['DSA_sent'] = True
+        if v['Databases_completed'] and v['Databases_sent'] is False:
+            course_name = 'Databases'
+            if email not in email_list:
+                email_list.append(email)
+            print("To: {}\nRe: Your Learning Progress\nHello, {} {}! You have accomplished our {} course!".format(email,
+                                                                                                                  name,
+                                                                                                                  last_name,
+                                                                                                                  course_name))
+            v['Databases_sent'] = True
+        if v['Flask_completed'] and v['Flask_sent'] is False:
+            course_name = 'Flask'
+            if email not in email_list:
+                email_list.append(email)
+            print("To: {}\nRe: Your Learning Progress\nHello, {} {}! You have accomplished our {} course!".format(email,
+                                                                                                                  name,
+                                                                                                                  last_name,
+                                                                                                                  course_name))
+            v['Flask_sent'] = True
+    return "Total {} students have been notified.".format(len(email_list))
+
+
+commands_list = ['back', 'exit', 'add students', 'list', 'add points', "find", "statistics", "notify"]
 id_list = {}
+points_list = {'Python': 0, 'DSA': 0, 'Databases': 0, 'Flask': 0}
 students = set()
 print("Learning progress tracker")
-inp = input()
+
 while True:
+    inp = input()
     if len(inp.strip()) == 0:
         print('No input.')
-        inp = input()
-    elif inp == 'add students':
-        reply = add_students(students, id_list)
-        print(' '.join(reply))
-        inp = input()
     elif inp == 'back':
         print("Enter 'exit' to exit the program")
-        inp = input()
     elif inp == 'exit':
         print('Bye!')
         break
-    elif inp == 'list':
+    if inp == 'add students':
+        reply = add_students(students, id_list)
+        print(' '.join(reply))
+        if inp == 'back':
+            print("Enter 'exit' to exit the program")
+    if inp == 'list':
         if len(id_list) == 0:
             print("No students found.")
-            inp = input()
         else:
             print('Students:')
             for v in id_list:
                 print(v)
-            inp = input()
-    elif inp == 'add points':
-        result = add_points(id_list, points_list)
-        if result == 'back':
-            inp = input()
-        else:
-            print(result)
-    elif inp == "find":
-        find_result = return_points(id_list)
-        if find_result == 'back':
-            inp = input()
-        else:
-            print(find_result)
-    elif inp == "statistics":
+    if inp == 'add points':
+        add_points(id_list, points_list)
+    if inp == "find":
+        print(return_points(id_list))
+    if inp == "statistics":
         statistics_print_statement(id_list)
-        if calculate_percentage() == 'back':
-            inp = input()
-        else:
-            calculate_percentage()
-    else:
+        calculate_percentage()
+    if inp == "notify":
+        mark_notification_needed(id_list)
+        print(notification_form(id_list))
+    if inp not in commands_list:
         print("Unknown command!")
-        inp = input()
